@@ -1,7 +1,6 @@
 ﻿const int QuadrantSize = 20;
 const int InnerRadius = 5;
 const int OuterRadius = 10;
-const double RotationAngle = Math.PI / 9;
 
 static void DrawPixel(int x, int y)
 {
@@ -15,23 +14,36 @@ static bool IsInBound(int x, int y)
     return foo * foo <= InnerRadius * InnerRadius;
 }
 
-static bool IsInBoundRotated(int x, int y)
+static bool IsInBoundRotated(int x, int y, double angle)
 {
-    var cos = Math.Cos(RotationAngle);
-    var sin = Math.Sin(RotationAngle);
-    var foo = Math.Sqrt(x * x + y * y * cos * cos) - OuterRadius;
-    return foo * foo + y * y * sin * sin <= InnerRadius * InnerRadius;
+    var cos = Math.Cos(angle);
+    var sin = Math.Sin(angle);
+    var z = (OuterRadius - InnerRadius / 2.0) * sin;
+    // why is it == and not != ???
+    // crazy!
+    if (x >= 0 == cos >= 0)
+    {
+        z = -z;
+    }
+    var firstBracket = Math.Sqrt((x * cos - z * sin) * (x * cos - z * sin) + y * y) - OuterRadius;
+    var secondBracket = x * sin + z * cos;
+    return firstBracket * firstBracket + secondBracket * secondBracket <= InnerRadius * InnerRadius;
 }
 
-for (int x = -QuadrantSize; x < 2 * QuadrantSize; x++)
+var angle = 0.0;
+while (angle < Math.PI * 2)
 {
-    for (int y = -QuadrantSize; y < 2 * QuadrantSize; y++)
+    for (int x = -QuadrantSize; x < 2 * QuadrantSize; x++)
     {
-        if (IsInBoundRotated(x, y))
+        for (int y = -QuadrantSize; y < 2 * QuadrantSize; y++)
         {
-            DrawPixel(x, y);
+            if (IsInBoundRotated(x, y, angle))
+            {
+                DrawPixel(x, y);
+            }
         }
     }
+    Thread.Sleep(100);
+    Console.Clear();
+    angle += 0.1;
 }
-
-Console.ReadKey();
