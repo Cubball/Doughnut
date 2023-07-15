@@ -14,22 +14,26 @@ static bool IsInBoundRotated(int x, int y, double XZAngle, double XYAngle)
     var cosXZ = Math.Cos(XZAngle);
     var sinXY = Math.Sin(XYAngle);
     var cosXY = Math.Cos(XYAngle);
-    // TODO: figure out how to check for z's sign and swap it if necessary
     var z = (OuterRadius - InnerRadius / 2.0) * sinXZ;
+    var z2 = -z;
 
-    var firstBracket = Math.Sqrt(((x * cosXY - y * sinXY) * cosXZ - z * sinXZ) *
-            ((x * cosXY - y * sinXY) * cosXZ - z * sinXZ) + (x * sinXY + y * cosXY) * (x * sinXY + y * cosXY)) - OuterRadius;
-    var secondBracket = (x * cosXY - y * sinXY) * sinXZ + z * cosXZ;
-    return firstBracket * firstBracket + secondBracket * secondBracket <= InnerRadius * InnerRadius;
+    var firstBracket = Math.Sqrt((cosXZ * (x * cosXY + y * sinXY) + z * sinXZ) * (cosXZ * (x * cosXY + y * sinXY) + z * sinXZ) +
+            (x * sinXY - y * cosXY) * (x * sinXY - y * cosXY)) - OuterRadius;
+    var secondBracket = sinXZ * (x * cosXY + y * sinXY) - z * cosXZ;
+    var firstBracket2 = Math.Sqrt((cosXZ * (x * cosXY + y * sinXY) + z2 * sinXZ) * (cosXZ * (x * cosXY + y * sinXY) + z2 * sinXZ) +
+            (x * sinXY - y * cosXY) * (x * sinXY - y * cosXY)) - OuterRadius;
+    var secondBracket2 = sinXZ * (x * cosXY + y * sinXY) - z2 * cosXZ;
+    return firstBracket * firstBracket + secondBracket * secondBracket <= InnerRadius * InnerRadius ||
+        firstBracket2 * firstBracket2 + secondBracket2 * secondBracket2 <= InnerRadius * InnerRadius;
 }
 
 Console.CursorVisible = false;
 var angle = 0.0;
 while (!Console.KeyAvailable)
 {
-    for (int x = -QuadrantSize; x < 2 * QuadrantSize; x++)
+    for (int y = -QuadrantSize; y < QuadrantSize; y++)
     {
-        for (int y = -QuadrantSize; y < 2 * QuadrantSize; y++)
+        for (int x = -QuadrantSize; x < QuadrantSize; x++)
         {
             if (IsInBoundRotated(x, y, angle, angle))
             {
