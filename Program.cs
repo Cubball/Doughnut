@@ -1,23 +1,26 @@
-﻿const int InnerRadius = 5;
-const int OuterRadius = 10;
-const int QuadrantSize = 20;
+﻿const int InnerRadius = 8;
+const int OuterRadius = 15;
+const int QuadrantSize = 25;
 
-void DrawPixel(int x, int y, double cos)
+char GetPixel(double cos)
 {
-    Console.SetCursorPosition(2 * (x + QuadrantSize), y + QuadrantSize);
-    var pixel = cos switch
+    return cos switch
     {
-        > 0.9 => "@@",
-        > 0.7 => "%%",
-        > 0.5 => "##",
-        > 0.45 => "**",
-        > 0.4 => "++",
-        > 0.35 => "==",
-        > 0.2 => "--",
-        > 0.1 => "::",
-        _ => "..",
+        > 0.9 => '@',
+        > 0.7 => '%',
+        > 0.5 => '#',
+        > 0.45 => '*',
+        > 0.4 => '+',
+        > 0.35 => '=',
+        > 0.2 => '-',
+        > 0.1 => ':',
+        _ => '.',
     };
-    Console.Write(pixel);
+}
+
+void DrawPixel(char[][] picture, int x, int y, char pixel)
+{
+    picture[y + QuadrantSize][2 * (x + QuadrantSize)] = picture[y + QuadrantSize][2 * (x + QuadrantSize) + 1] = pixel;
 }
 
 bool IsInBoundRotated(int x, int y, double z, double XZAngle, double XYAngle)
@@ -91,27 +94,35 @@ double GetDerivativeWithRespectToZ(int x, int y, double z, double XZAngle, doubl
         (root - OuterRadius) / root * 2 * sinXZ * (cosXZ * (x * cosXY + y * sinXY) + z * sinXZ);
 }
 
+var picture = new char[QuadrantSize * 2][];
+for (int i = 0; i < picture.Length; i++)
+{
+    picture[i] = new char[QuadrantSize * 4];
+}
+
 Console.CursorVisible = false;
 var angle = 0.0;
 while (!Console.KeyAvailable)
 {
-    for (int y = -QuadrantSize; y <= QuadrantSize; y++)
+    for (int y = -QuadrantSize; y < QuadrantSize; y++)
     {
-        for (int x = -QuadrantSize; x <= QuadrantSize; x++)
+        for (int x = -QuadrantSize; x < QuadrantSize; x++)
         {
             var z = GetZ(x, y, angle, angle / 4);
             if (double.IsNaN(z))
             {
+                DrawPixel(picture, x, y, ' ');
                 continue;
             }
-            var dz = GetDerivativeWithRespectToZ(x, y, z, angle, angle / 4);
             var dx = GetDerivativeWithRespectToX(x, y, z, angle, angle / 4);
             var dy = GetDerivativeWithRespectToY(x, y, z, angle, angle / 4);
-            var cos = (dx + dy + dz) / (Math.Sqrt(dx * dx + dy * dy + dz * dz) * Math.Sqrt(3));
-            DrawPixel(x, y, Math.Abs(cos));
+            var dz = GetDerivativeWithRespectToZ(x, y, z, angle, angle / 4);
+            var cos = (dy + dz) / (Math.Sqrt(dx * dx + dy * dy + dz * dz) * Math.Sqrt(2));
+            DrawPixel(picture, x, y, GetPixel(Math.Abs(cos)));
         }
+        Console.WriteLine(picture[y + QuadrantSize]);
     }
-    Thread.Sleep(50);
+    Thread.Sleep(25);
     Console.Clear();
     angle += 0.1;
 }
