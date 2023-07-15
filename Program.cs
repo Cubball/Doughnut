@@ -8,36 +8,30 @@ static void DrawPixel(int x, int y)
     Console.Write("##");
 }
 
-static bool IsInBound(int x, int y)
+static bool IsInBoundRotated(int x, int y, double XZAngle, double XYAngle)
 {
-    var foo = Math.Sqrt(x * x + y * y) - OuterRadius;
-    return foo * foo <= InnerRadius * InnerRadius;
-}
+    var sinXZ = Math.Sin(XZAngle);
+    var cosXZ = Math.Cos(XZAngle);
+    var sinXY = Math.Sin(XYAngle);
+    var cosXY = Math.Cos(XYAngle);
+    // TODO: figure out how to check for z's sign and swap it if necessary
+    var z = (OuterRadius - InnerRadius / 2.0) * sinXZ;
 
-static bool IsInBoundRotated(int x, int y, double angle)
-{
-    var cos = Math.Cos(angle);
-    var sin = Math.Sin(angle);
-    var z = (OuterRadius - InnerRadius / 2.0) * sin;
-    // why is it == and not != ???
-    // crazy!
-    if (x >= 0 == cos >= 0)
-    {
-        z = -z;
-    }
-    var firstBracket = Math.Sqrt((x * cos - z * sin) * (x * cos - z * sin) + y * y) - OuterRadius;
-    var secondBracket = x * sin + z * cos;
+    var firstBracket = Math.Sqrt(((x * cosXY - y * sinXY) * cosXZ - z * sinXZ) *
+            ((x * cosXY - y * sinXY) * cosXZ - z * sinXZ) + (x * sinXY + y * cosXY) * (x * sinXY + y * cosXY)) - OuterRadius;
+    var secondBracket = (x * cosXY - y * sinXY) * sinXZ + z * cosXZ;
     return firstBracket * firstBracket + secondBracket * secondBracket <= InnerRadius * InnerRadius;
 }
 
+Console.CursorVisible = false;
 var angle = 0.0;
-while (angle < Math.PI * 2)
+while (!Console.KeyAvailable)
 {
     for (int x = -QuadrantSize; x < 2 * QuadrantSize; x++)
     {
         for (int y = -QuadrantSize; y < 2 * QuadrantSize; y++)
         {
-            if (IsInBoundRotated(x, y, angle))
+            if (IsInBoundRotated(x, y, angle, angle))
             {
                 DrawPixel(x, y);
             }
