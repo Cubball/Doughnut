@@ -1,12 +1,7 @@
 ﻿const int InnerRadius = 8;
 const int OuterRadius = 15;
 const int QuadrantSize = 25;
-
-char GetPixel(double cos)
-{
-    var pixels = new[] { '.', ':', '-', '=', '+', '*', '#', '%', '@', '@' };
-    return pixels[(int)(cos * 9)];
-}
+var pixels = new[] { '.', ':', '-', '=', '+', '*', '#', '%', '@', '@' };
 
 void DrawPixel(char[][] picture, int x, int y, char pixel)
 {
@@ -19,11 +14,6 @@ bool IsInBoundRotated(int x, int y, double z, double XZAngle, double XYAngle)
     var cosXZ = Math.Cos(XZAngle);
     var sinXY = Math.Sin(XYAngle);
     var cosXY = Math.Cos(XYAngle);
-    // var z = (OuterRadius - InnerRadius / 2.0) * sinXZ;
-    // if (cosXZ > 0 != x * cosXY + y * sinXY > 0)
-    // {
-    //     z = -z;
-    // }
     var firstBracket = Math.Sqrt((cosXZ * (x * cosXY + y * sinXY) + z * sinXZ) * (cosXZ * (x * cosXY + y * sinXY) + z * sinXZ) +
             (x * sinXY - y * cosXY) * (x * sinXY - y * cosXY)) - OuterRadius;
     var secondBracket = sinXZ * (x * cosXY + y * sinXY) - z * cosXZ;
@@ -108,7 +98,7 @@ while (!Console.KeyAvailable)
             var dy = GetDerivativeWithRespectToY(x, y, z, angle, angle / 4);
             var dz = GetDerivativeWithRespectToZ(x, y, z, angle, angle / 4);
             var cos = dz / (Math.Sqrt(dx * dx + dy * dy + dz * dz));
-            DrawPixel(picture, x, y, GetPixel(Math.Abs(cos)));
+            DrawPixel(picture, x, y, pixels[(int)(Math.Abs(cos) * 9)]);
         }
         Console.WriteLine(picture[y + QuadrantSize]);
     }
