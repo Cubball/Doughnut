@@ -32,9 +32,17 @@ double GetZ(int x, int y, double XZAngle, double XYAngle)
             z -= InnerRadius / 2.0;
             continue;
         }
-        while (IsInBoundRotated(x, y, z + 0.05, XZAngle, XYAngle))
+        while (upperBound - z >= 1E-4)
         {
-            z += 0.05;
+            var middle = (upperBound + z) / 2;
+            if (IsInBoundRotated(x, y, middle, XZAngle, XYAngle))
+            {
+                z = middle;
+            }
+            else
+            {
+                upperBound = middle;
+            }
         }
         return z;
     }
@@ -102,7 +110,7 @@ while (!Console.KeyAvailable)
         }
         Console.WriteLine(picture[y + QuadrantSize]);
     }
-    Thread.Sleep(50);
+    Thread.Sleep(20);
     Console.Clear();
     angle += 0.1;
 }
