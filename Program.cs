@@ -14,50 +14,6 @@ void DrawPixel(char[][] picture, int x, int y, char pixel)
     pixel;
 }
 
-(double dx, double dy, double dz) GetDerivatives(int x, int y, double sinA, double cosA, double sinT, double cosT)
-{
-    var upperBound = R + rHalf;
-    var lowerBound = -upperBound;
-    var z = upperBound;
-    var a = x * cosT + y * sinT;
-    var b = x * sinT - y * cosT;
-    while (z >= lowerBound)
-    {
-        var c = a * cosA + z * sinA;
-        var d = a * sinA - z * cosA;
-        var f = Math.Sqrt(b * b + c * c) - R;
-        if (d * d + f * f > rSquared)
-        {
-            z -= rHalf;
-            continue;
-        }
-
-        while (upperBound - z >= Accuracy)
-        {
-            var middle = (upperBound + z) / 2;
-            c = a * cosA + middle * sinA;
-            d = a * sinA - middle * cosA;
-            f = Math.Sqrt(b * b + c * c) - R;
-            if (d * d + f * f <= rSquared)
-            {
-                z = middle;
-            }
-            else
-            {
-                upperBound = middle;
-            }
-        }
-
-        var e = f + R;
-        var dx = (f * ((b * sinT + c * cosA * cosT) / e) + d * sinA * cosT);
-        var dy = (f * ((c * cosA * sinT - b * cosT) / e) + d * sinA * sinT);
-        var dz = (f * c * sinA) / e - d * cosA;
-        return (dx, dy, dz);
-    }
-
-    return (double.NaN, double.NaN, double.NaN);
-}
-
 var picture = new char[size * 2][];
 for (int i = 0; i < picture.Length; i++)
 {
@@ -77,14 +33,53 @@ while (!Console.KeyAvailable)
     {
         for (int x = -size; x < size; x++)
         {
-            var (dx, dy, dz) = GetDerivatives(x, y, sinA, cosA, sinT, cosT);
-            if (double.IsNaN(dz))
+            var skip = false;
+            var upperBound = R + rHalf;
+            var lowerBound = -upperBound;
+            var z = upperBound;
+            var a = x * cosT + y * sinT;
+            var b = x * sinT - y * cosT;
+            while (z >= lowerBound)
+            {
+                var c = a * cosA + z * sinA;
+                var d = a * sinA - z * cosA;
+                var f = Math.Sqrt(b * b + c * c) - R;
+                if (d * d + f * f > rSquared)
+                {
+                    z -= rHalf;
+                    continue;
+                }
+
+                while (upperBound - z >= Accuracy)
+                {
+                    var middle = (upperBound + z) / 2;
+                    c = a * cosA + middle * sinA;
+                    d = a * sinA - middle * cosA;
+                    f = Math.Sqrt(b * b + c * c) - R;
+                    if (d * d + f * f <= rSquared)
+                    {
+                        z = middle;
+                    }
+                    else
+                    {
+                        upperBound = middle;
+                    }
+                }
+
+                var e = f + R;
+                var dx = (f * ((b * sinT + c * cosA * cosT) / e) + d * sinA * cosT);
+                var dy = (f * ((c * cosA * sinT - b * cosT) / e) + d * sinA * sinT);
+                var dz = (f * c * sinA) / e - d * cosA;
+                var cos = dz / (Math.Sqrt(dx * dx + dy * dy + dz * dz));
+                DrawPixel(picture, x, y, pixels[(int)Math.Round(cos * 8)]);
+                skip = true;
+                break;
+            }
+
+            if (!skip)
             {
                 DrawPixel(picture, x, y, ' ');
-                continue;
             }
-            var cos = dz / (Math.Sqrt(dx * dx + dy * dy + dz * dz));
-            DrawPixel(picture, x, y, pixels[(int)Math.Round(cos * 8)]);
         }
         Console.WriteLine(picture[y + size]);
     }
