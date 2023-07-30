@@ -92,7 +92,7 @@ while (!Console.KeyAvailable)
             }
             var (dx, dy, dz) = GetDerivatives(x, y, z, sinA, cosA, sinT, cosT);
             var cos = dz / (Math.Sqrt(dx * dx + dy * dy + dz * dz));
-            DrawPixel(picture, x, y, pixels[(int)Math.Round(Math.Abs(cos) * 8)]);
+            DrawPixel(picture, x, y, pixels[(int)Math.Round(cos * 8)]);
         }
         Console.WriteLine(picture[y + QuadrantSize]);
     }
