@@ -13,16 +13,6 @@ void DrawPixel(char[][] picture, int x, int y, char pixel)
     pixel;
 }
 
-bool IsInBoundRotated(int x, int y, double z, double sinA, double cosA, double sinT, double cosT)
-{
-    var a = x * cosT + y * sinT;
-    var b = x * sinT - y * cosT;
-    var c = a * cosA + z * sinA;
-    var d = a * sinA - z * cosA;
-    var f = Math.Sqrt(b * b + c * c) - OuterRadius;
-    return d * d + f * f <= InnerRadius * InnerRadius;
-}
-
 (double dx, double dy, double dz) GetDerivatives(int x, int y, double sinA, double cosA, double sinT, double cosT)
 {
     var upperBound = OuterRadius + HalfInnerRadius;
@@ -65,49 +55,6 @@ bool IsInBoundRotated(int x, int y, double z, double sinA, double cosA, double s
     }
 
     return (double.NaN, double.NaN, double.NaN);
-}
-
-double GetZ(int x, int y, double sinA, double cosA, double sinT, double cosT)
-{
-    var upperBound = OuterRadius + InnerRadius / 2.0;
-    var lowerBound = -upperBound;
-    var z = upperBound;
-    while (z >= lowerBound)
-    {
-        if (!IsInBoundRotated(x, y, z, sinA, cosA, sinT, cosT))
-        {
-            z -= HalfInnerRadius;
-            continue;
-        }
-        while (upperBound - z >= Accuracy)
-        {
-            var middle = (upperBound + z) / 2;
-            if (IsInBoundRotated(x, y, middle, sinA, cosA, sinT, cosT))
-            {
-                z = middle;
-            }
-            else
-            {
-                upperBound = middle;
-            }
-        }
-        return z;
-    }
-    return double.NaN;
-}
-
-(double dx, double dy, double dz) GetDerivativesOld(int x, int y, double z, double sinA, double cosA, double sinT, double cosT)
-{
-    var a = x * cosT + y * sinT;
-    var b = x * sinT - y * cosT;
-    var c = a * cosA + z * sinA;
-    var d = a * sinA - z * cosA;
-    var e = Math.Sqrt(b * b + c * c);
-    var f = e - OuterRadius;
-    var dx = (f * ((b * sinT + c * cosA * cosT) / e) + d * sinA * cosT);
-    var dy = (f * ((c * cosA * sinT - b * cosT) / e) + d * sinA * sinT);
-    var dz = (f * c * sinA) / e - d * cosA;
-    return (dx, dy, dz);
 }
 
 var picture = new char[QuadrantSize * 2][];
