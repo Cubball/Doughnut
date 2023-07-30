@@ -1,7 +1,8 @@
 ﻿const int InnerRadius = 8;
 const int OuterRadius = 16;
 const int QuadrantSize = 25;
-const double QuaterInnerRadius = InnerRadius / 4.0;
+const int InnerRadiusSquared = InnerRadius * InnerRadius;
+const double HalfInnerRadius = InnerRadius / 2.0;
 const double Accuracy = 1E-4;
 var pixels = new[] { '.', ':', '-', '=', '+', '*', '#', '%', '@' };
 
@@ -22,6 +23,50 @@ bool IsInBoundRotated(int x, int y, double z, double sinA, double cosA, double s
     return d * d + f * f <= InnerRadius * InnerRadius;
 }
 
+(double dx, double dy, double dz) GetDerivatives(int x, int y, double sinA, double cosA, double sinT, double cosT)
+{
+    var upperBound = OuterRadius + HalfInnerRadius;
+    var lowerBound = -upperBound;
+    var z = upperBound;
+    while (z >= lowerBound)
+    {
+        var a = x * cosT + y * sinT;
+        var b = x * sinT - y * cosT;
+        var c = a * cosA + z * sinA;
+        var d = a * sinA - z * cosA;
+        var f = Math.Sqrt(b * b + c * c) - OuterRadius;
+        if (d * d + f * f > InnerRadiusSquared)
+        {
+            z -= HalfInnerRadius;
+            continue;
+        }
+
+        while (upperBound - z >= Accuracy)
+        {
+            var middle = (upperBound + z) / 2;
+            c = a * cosA + middle * sinA;
+            d = a * sinA - middle * cosA;
+            f = Math.Sqrt(b * b + c * c) - OuterRadius;
+            if (d * d + f * f <= InnerRadiusSquared)
+            {
+                z = middle;
+            }
+            else
+            {
+                upperBound = middle;
+            }
+        }
+
+        var e = f + OuterRadius;
+        var dx = (f * ((b * sinT + c * cosA * cosT) / e) + d * sinA * cosT);
+        var dy = (f * ((c * cosA * sinT - b * cosT) / e) + d * sinA * sinT);
+        var dz = (f * c * sinA) / e - d * cosA;
+        return (dx, dy, dz);
+    }
+
+    return (double.NaN, double.NaN, double.NaN);
+}
+
 double GetZ(int x, int y, double sinA, double cosA, double sinT, double cosT)
 {
     var upperBound = OuterRadius + InnerRadius / 2.0;
@@ -31,7 +76,7 @@ double GetZ(int x, int y, double sinA, double cosA, double sinT, double cosT)
     {
         if (!IsInBoundRotated(x, y, z, sinA, cosA, sinT, cosT))
         {
-            z -= QuaterInnerRadius;
+            z -= HalfInnerRadius;
             continue;
         }
         while (upperBound - z >= Accuracy)
@@ -51,7 +96,7 @@ double GetZ(int x, int y, double sinA, double cosA, double sinT, double cosT)
     return double.NaN;
 }
 
-(double dx, double dy, double dz) GetDerivatives(int x, int y, double z, double sinA, double cosA, double sinT, double cosT)
+(double dx, double dy, double dz) GetDerivativesOld(int x, int y, double z, double sinA, double cosA, double sinT, double cosT)
 {
     var a = x * cosT + y * sinT;
     var b = x * sinT - y * cosT;
@@ -84,13 +129,12 @@ while (!Console.KeyAvailable)
     {
         for (int x = -QuadrantSize; x < QuadrantSize; x++)
         {
-            var z = GetZ(x, y, sinA, cosA, sinT, cosT);
-            if (double.IsNaN(z))
+            var (dx, dy, dz) = GetDerivatives(x, y, sinA, cosA, sinT, cosT);
+            if (double.IsNaN(dz))
             {
                 DrawPixel(picture, x, y, ' ');
                 continue;
             }
-            var (dx, dy, dz) = GetDerivatives(x, y, z, sinA, cosA, sinT, cosT);
             var cos = dz / (Math.Sqrt(dx * dx + dy * dy + dz * dz));
             DrawPixel(picture, x, y, pixels[(int)Math.Round(cos * 8)]);
         }
