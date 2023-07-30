@@ -1,21 +1,22 @@
-﻿const int InnerRadius = 8;
-const int OuterRadius = 16;
-const int Size = InnerRadius + OuterRadius + 1;
-const int InnerRadiusSquared = InnerRadius * InnerRadius;
-const double HalfInnerRadius = InnerRadius / 2.0;
+﻿int size = Math.Min(Console.WindowWidth, Console.WindowHeight) / 2 - 3;
+int r = (size - 1) / 3;
+int R = 2 * r;
+int rSquared = r * r;
+double rHalf = r / 2.0;
 const double Accuracy = 1E-4;
+
 var pixels = new[] { '.', ':', '-', '=', '+', '*', '#', '%', '@' };
 
 void DrawPixel(char[][] picture, int x, int y, char pixel)
 {
-    picture[y + Size][2 * (x + Size)] =
-    picture[y + Size][2 * (x + Size) + 1] =
+    picture[y + size][2 * (x + size)] =
+    picture[y + size][2 * (x + size) + 1] =
     pixel;
 }
 
 (double dx, double dy, double dz) GetDerivatives(int x, int y, double sinA, double cosA, double sinT, double cosT)
 {
-    var upperBound = OuterRadius + HalfInnerRadius;
+    var upperBound = R + rHalf;
     var lowerBound = -upperBound;
     var z = upperBound;
     var a = x * cosT + y * sinT;
@@ -24,10 +25,10 @@ void DrawPixel(char[][] picture, int x, int y, char pixel)
     {
         var c = a * cosA + z * sinA;
         var d = a * sinA - z * cosA;
-        var f = Math.Sqrt(b * b + c * c) - OuterRadius;
-        if (d * d + f * f > InnerRadiusSquared)
+        var f = Math.Sqrt(b * b + c * c) - R;
+        if (d * d + f * f > rSquared)
         {
-            z -= HalfInnerRadius;
+            z -= rHalf;
             continue;
         }
 
@@ -36,8 +37,8 @@ void DrawPixel(char[][] picture, int x, int y, char pixel)
             var middle = (upperBound + z) / 2;
             c = a * cosA + middle * sinA;
             d = a * sinA - middle * cosA;
-            f = Math.Sqrt(b * b + c * c) - OuterRadius;
-            if (d * d + f * f <= InnerRadiusSquared)
+            f = Math.Sqrt(b * b + c * c) - R;
+            if (d * d + f * f <= rSquared)
             {
                 z = middle;
             }
@@ -47,7 +48,7 @@ void DrawPixel(char[][] picture, int x, int y, char pixel)
             }
         }
 
-        var e = f + OuterRadius;
+        var e = f + R;
         var dx = (f * ((b * sinT + c * cosA * cosT) / e) + d * sinA * cosT);
         var dy = (f * ((c * cosA * sinT - b * cosT) / e) + d * sinA * sinT);
         var dz = (f * c * sinA) / e - d * cosA;
@@ -57,10 +58,10 @@ void DrawPixel(char[][] picture, int x, int y, char pixel)
     return (double.NaN, double.NaN, double.NaN);
 }
 
-var picture = new char[Size * 2][];
+var picture = new char[size * 2][];
 for (int i = 0; i < picture.Length; i++)
 {
-    picture[i] = new char[Size * 4];
+    picture[i] = new char[size * 4];
 }
 
 Console.CursorVisible = false;
@@ -72,9 +73,9 @@ while (!Console.KeyAvailable)
     var cosA = Math.Cos(alpha);
     var sinT = Math.Sin(theta);
     var cosT = Math.Cos(theta);
-    for (int y = -Size; y < Size; y++)
+    for (int y = -size; y < size; y++)
     {
-        for (int x = -Size; x < Size; x++)
+        for (int x = -size; x < size; x++)
         {
             var (dx, dy, dz) = GetDerivatives(x, y, sinA, cosA, sinT, cosT);
             if (double.IsNaN(dz))
@@ -85,7 +86,7 @@ while (!Console.KeyAvailable)
             var cos = dz / (Math.Sqrt(dx * dx + dy * dy + dz * dz));
             DrawPixel(picture, x, y, pixels[(int)Math.Round(cos * 8)]);
         }
-        Console.WriteLine(picture[y + Size]);
+        Console.WriteLine(picture[y + size]);
     }
     Thread.Sleep(30);
     Console.Clear();
