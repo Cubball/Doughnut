@@ -1,6 +1,6 @@
 ﻿const int InnerRadius = 8;
 const int OuterRadius = 16;
-const int QuadrantSize = 25;
+const int Size = InnerRadius + OuterRadius + 1;
 const int InnerRadiusSquared = InnerRadius * InnerRadius;
 const double HalfInnerRadius = InnerRadius / 2.0;
 const double Accuracy = 1E-4;
@@ -8,8 +8,8 @@ var pixels = new[] { '.', ':', '-', '=', '+', '*', '#', '%', '@' };
 
 void DrawPixel(char[][] picture, int x, int y, char pixel)
 {
-    picture[y + QuadrantSize][2 * (x + QuadrantSize)] =
-    picture[y + QuadrantSize][2 * (x + QuadrantSize) + 1] =
+    picture[y + Size][2 * (x + Size)] =
+    picture[y + Size][2 * (x + Size) + 1] =
     pixel;
 }
 
@@ -18,10 +18,10 @@ void DrawPixel(char[][] picture, int x, int y, char pixel)
     var upperBound = OuterRadius + HalfInnerRadius;
     var lowerBound = -upperBound;
     var z = upperBound;
+    var a = x * cosT + y * sinT;
+    var b = x * sinT - y * cosT;
     while (z >= lowerBound)
     {
-        var a = x * cosT + y * sinT;
-        var b = x * sinT - y * cosT;
         var c = a * cosA + z * sinA;
         var d = a * sinA - z * cosA;
         var f = Math.Sqrt(b * b + c * c) - OuterRadius;
@@ -57,10 +57,10 @@ void DrawPixel(char[][] picture, int x, int y, char pixel)
     return (double.NaN, double.NaN, double.NaN);
 }
 
-var picture = new char[QuadrantSize * 2][];
+var picture = new char[Size * 2][];
 for (int i = 0; i < picture.Length; i++)
 {
-    picture[i] = new char[QuadrantSize * 4];
+    picture[i] = new char[Size * 4];
 }
 
 Console.CursorVisible = false;
@@ -72,9 +72,9 @@ while (!Console.KeyAvailable)
     var cosA = Math.Cos(alpha);
     var sinT = Math.Sin(theta);
     var cosT = Math.Cos(theta);
-    for (int y = -QuadrantSize; y < QuadrantSize; y++)
+    for (int y = -Size; y < Size; y++)
     {
-        for (int x = -QuadrantSize; x < QuadrantSize; x++)
+        for (int x = -Size; x < Size; x++)
         {
             var (dx, dy, dz) = GetDerivatives(x, y, sinA, cosA, sinT, cosT);
             if (double.IsNaN(dz))
@@ -85,7 +85,7 @@ while (!Console.KeyAvailable)
             var cos = dz / (Math.Sqrt(dx * dx + dy * dy + dz * dz));
             DrawPixel(picture, x, y, pixels[(int)Math.Round(cos * 8)]);
         }
-        Console.WriteLine(picture[y + QuadrantSize]);
+        Console.WriteLine(picture[y + Size]);
     }
     Thread.Sleep(30);
     Console.Clear();
